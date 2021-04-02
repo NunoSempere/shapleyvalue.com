@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+
+<!-- 
+	Sources:
+		+ https://gist.github.com/cmatskas/8725a6ee4f5f1a8e1ceahttps://gist.github.com/cmatskas/8725a6ee4f5f1a8e1cea
+		+ cdnjs
+-->
+
+<head>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.0.0-alpha1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-csv/0.71/jquery.csv-0.71.min.js"></script>
+    <script type="text/javascript">  
+    $(document).ready(function() {
+
+    // The event listener for the file upload
+    document.getElementById('txtFileUpload').addEventListener('change', upload, false);
+
+    document.getElementById('txtFileUpload').addEventListener('click', reset, false);
+    
+    function reset(){
+        document.getElementById("txtFileUpload").value = null;
+        // This way, the event change fires even if you upload the same file twice
+    }
+    
+    // Method that checks that the browser supports the HTML5 File API
+    function browserSupportFileUpload() {
+        var isCompatible = false;
+        if (window.File && window.FileReader && window.FileList && window.Blob) {
+        isCompatible = true;
+        }
+        return isCompatible;
+    }
+
+    // Method that reads and processes the selected file
+    function upload(evt) {
+        uploadedSameFileTwice = false;
+        if (!browserSupportFileUpload()) {
+            alert('The File APIs are not fully supported in this browser!');
+            } else {
+                // alert("Checkpoint Charlie");
+                // var data = null;
+                data = null;
+                var file = evt.target.files[0];
+                var reader = new FileReader();
+                reader.readAsText(file);
+                reader.onload = function(event) {
+                    var csvData = event.target.result;
+                    data = $.csv.toArrays(csvData);
+                    if (data && data.length > 0) {
+	                   // alert('Imported -' + data.length + '- rows successfully!');
+                        wrapperProportionalApprovalVoting(data);
+                    } else {
+                        alert('No data to import!');
+                    }
+                };
+                reader.onerror = function() {
+                    alert('Unable to read ' + file.fileName);
+                };
+            }
+        }
+	
+    function wrapperProportionalApprovalVoting(data){
+	let dataColumn1 = data.map(x => x[1]);
+		// this gets us the first column (columns start at 0).
+		// data[][1] breaks the thing without throwing an error in the browser.
+
+	let dataColumn1Split = dataColumn1.map( element => element.split(", "));
+		// One row of the first column might be "Candidate1, Candidate2". 
+		// This transforms it to ["Candidate1", "Candidate2"]
+
+
+	let uniqueCandidates = findUnique(dataColumn1Split);
+		// Finds all the candidates
+	
+	// In this voting method, all voters start with a weight of 1, which changes as candidates are elected
+	// So that voters who have had one of their candidates elected have less influence for the next candidates.
+	
+	let weights = Array(dataColumn1Split.length).fill(1);
+
+	// Find the most popular one, given the weights. Update the weights
+
+	//alert("\n"+dataColumn1Split[0]);
+	
+	let n = document.getElementById("numWinners").value;
+	let winners = [];
+	
+	for(i=0; i<n; i++){
+		let newWinner = findTheNextMostPopularOneGivenTheWeights(dataColumn1Split, weights, uniqueCandidates, winners);
+		winners.push(newWinner);
+		weights = updateWeightsGivenTheNewWinner(dataColumn1Split, weights, newWinner);
+	}
+	//alert(winners);
+
+	// Display the winners.
+	displayWinners(winners);
+    }
+
+    function displayWinners(winners){
+
+	// Header
+
+
+	// Ordered list with the winners
+	///alert(document.getElementsByTagName("OL")[0]);
+	
+	if(document.getElementsByTagName("OL")[0]==undefined){
+		headerH3 = document.createElement("h3");
+        headerH3.innerHTML = "Winners under Proportional Approval Voting:";
+
+        document.body.appendChild(headerH3);
+
+        orderedList = document.createElement("OL"); // Creates an ordered list
+        for(let i =0; i<winners.length; i++){
+            HTMLWinner = document.createElement("li");
+            HTMLWinner.appendChild(document.createTextNode(winners[i]));
+            orderedList.appendChild(HTMLWinner);
+        }	
+        
+        document.body.appendChild(orderedList);
+        
+	}else{
+	
+        oldOL = document.getElementsByTagName("OL")[0];
+        oldOL.remove();
+
+        orderedList = document.createElement("OL"); // Creates an ordered list
+        for(let i =0; i<winners.length; i++){
+            HTMLWinner = document.createElement("li");
+            HTMLWinner.appendChild(document.createTextNode(winners[i]));
+            orderedList.appendChild(HTMLWinner);
+        }	
+        
+        document.body.appendChild(orderedList);
+
+
+	}
+	
+    }
+    
+    function findTheNextMostPopularOneGivenTheWeights(arrayOfArrays, weights, uniqueCandidates, winners){
+	let popularity = Array(uniqueCandidates.length).fill(0);
+	for(let i = 0; i<uniqueCandidates.length; i++){
+		for(let j=1; j<arrayOfArrays.length; j++){
+            // j = 1 because we don't want to include the title
+            //alert("array = "+arrayOfArrays[j]);
+			if(arrayOfArrays[j].includes(uniqueCandidates[i])){
+				popularity[i]+= 1/weights[j];	
+			}
+		}
+	}
+	
+	for(let i = 0; i<popularity.length; i++){
+        //alert("popularity["+uniqueCandidates[i]+"] ="  +popularity[i]);
+	}
+
+	let maxPopularity = 0;
+	let winner = undefined;
+	//alert(popularity + "\n"+uniqueCandidates);
+	for(let i=0; i<uniqueCandidates.length; i++){
+		if(popularity[i]>=maxPopularity && !winners.includes(uniqueCandidates[i])){
+			// Note, this breaks a tie pretty arbitrarily
+			// Tie breaking mechanism: so obscure as to be random.
+			winner = uniqueCandidates[i];
+			//alert("new better:" +uniqueCandidates[i]);
+			maxPopularity = popularity[i];
+		}
+	}
+    //alert(winner);
+	return winner;	
+    } 
+    
+    function updateWeightsGivenTheNewWinner(arrayOfArrays, weights, newWinner){
+	for(let i=0; i<arrayOfArrays.length; i++){
+		
+		if(arrayOfArrays[i].includes(newWinner)){
+			weights[i] = weights[i]+1;
+		}
+		
+	}
+	return weights;
+    }
+
+    function findUnique(arrayOfArrays){
+	let uniqueElements = [];
+
+	for(let i = 1; i<arrayOfArrays.length; i++){ // We start with the second row (i=1, instead of i=0, because we take the first row to be a header)
+		for(let j=0; j<arrayOfArrays[i].length; j++){
+			if(!uniqueElements.includes(arrayOfArrays[i][j])){	
+				uniqueElements.push(arrayOfArrays[i][j]);
+			}
+		}
+	}
+	return uniqueElements;
+	
+    }
+    });
+
+</script>
+    </head>
+    <body>
+
+	<h1>Proportional Approval Voting MVP</h1>
+	<h2>What is this? How does this work?</h2>
+	<p>This is the simplest version of a program which computes the result of an election, under the <a href="https://www.electionscience.org/learn/electoral-system-glossary/#proportional_approval_voting" target="_blank">Proportional Approval Voting</a> method.</p>
+	<p>It takes a csv (comma separated value) file, with the same format as <a href="https://docs.google.com/spreadsheets/d/11pBOP6UJ8SSaHIY-s4dYwgBr4PHodh6cIXf-D4yl7HU/edit?usp=sharing" target="_blank">this one</a>, which might be produced by a Google Forms like <a href="https://docs.google.com/forms/d/1_-B5p8ePHnE1jXTGVT_kfRrMRqJuxmm8DPKn-MR1Pok/edit" target="_blank">this one.</a></p>
+  <p>It computes the result using client-side JavaScript, which means that all operations are run in your browser, as opposed to in a server which is not under your control. In effect, all this webpage does is provide you with a bunch of functions. In fact, you could just load this page, disconnect from the internet, upload your files, and you could still use the webpage to get the results you need.</p> 
+     <div id="dvImportSegments" class="fileupload ">
+    <fieldset>
+        <legend>Upload your CSV File to compute the result</legend>
+	<label>Number of winners: </label><input type="number" id="numWinners" value="2">
+		<!-- This is not really aesthetic; change. -->
+        <br>
+	<input type="file" name="File Upload" id="txtFileUpload" accept=".csv" />
+    </fieldset>
+    </div>
+     <p>Proudly created by <a href="https://nunosempere.github.io">Nu&ntildeo Sempere.</a></p>
+    </body>
+</html>
+
