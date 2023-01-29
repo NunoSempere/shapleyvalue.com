@@ -68,12 +68,12 @@ switch ($example) {
         $numPlayers =2;
         break;
     case 5:
-	echo "Example 5: Suppose that AMF will spend $1M on a net distribution. As a result of AMF’s commitment, the Gates Foundation contributes $400,000. If AMF had not acted, Gates would have spent the $400,000 on something else, half as valuable. AMF is player 1, Gates is player 2.";
+	echo "Suppose that the Against Malaria Foundation (AMF) will spend $1M on a malaria net distribution. As a result of AMF's commitment, the Gates Foundation contributes $400,000. If AMF had not acted, Gates would have spent the $400,000 on something else, half as valuable. AMF is player 1, Gates is player 2.";
 	$getCoalitionNum = array(0,1000000,200000,1400000);
         $numPlayers =2;
         break;
     case 6:
-	echo "Example 6: Suppose that AMF commits $1M to a net distribution. But if AMF had put nothing in, DFID would instead have committed $500,000 to the net distribution. Now, DFID commits that money to something half as valuable. AMF is player 1, DFID is player 2.";
+	echo "Example 6: Suppose that the Against Malaria Foundation (AMF) commits $1M to a malaria net distribution. But if AMF had put nothing in, DFID would instead have committed $500,000 to the net distribution. Now, DFID commits that money to something half as valuable. AMF is player 1, DFID is player 2.";
 	$getCoalitionNum = array(0,1000000,500000,1250000);
         $numPlayers =2;
         break;
@@ -116,6 +116,11 @@ switch ($example) {
 		}
 	}
 	break;
+    case 11:
+        echo "Example 11: An organization organizes a costless online vote to pass a measure of value 1, and it passes if it gets more than 3 votes. 7 people vote in favour.";
+        $getCoalitionNum = array(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 1, 1, 0, 0, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1);
+        $numPlayers = 7;
+        break;
     default:
         $example = -1;
 	break;
@@ -258,14 +263,14 @@ echo 	'</p>';
 echo '</br>';
 
 echo '<a href="/examples.html">List of examples</a></br>';
-echo '<a href="?example='.rand(1,10).'">Random example</a></br>';
+echo '<a href="?example='.rand(1,11).'">Random example</a></br>';
 
 ## More HTML flavor
 //echo '<h3>Also of interest:</h3>
 //	<a href="url">Shapley value resources</a> </br>'
 echo 	'<p>';
 echo 	'<br /></br>';
-echo	'<a href="https://nunosempere.github.io/">Other things I have done</a> </br>';
+echo	'See also: <a href="https://www.effectivealtruism.org/" target="_blank">"Effective Altruism"</a> for this concept applied to altruism</br>';
 echo 	'</p>';
 echo '</body>';
 echo '</html>';
